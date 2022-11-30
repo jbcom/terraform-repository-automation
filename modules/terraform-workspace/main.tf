@@ -346,3 +346,4 @@ locals {
     }
   ] : module.kms_sops_directory.0.files))
 }
+
