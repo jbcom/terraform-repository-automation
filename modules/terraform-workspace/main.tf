@@ -323,7 +323,7 @@ module "readme_doc" {
 module "kms_sops_directory" {
   count = var.config.secrets_kms_key_arn != "" ? 1 : 0
 
-  source = "../../secrets/kms-sops-directory"
+  source = "../terraform-secrets"
 
   kms_key_arn = var.config.secrets_kms_key_arn
 
