@@ -1,0 +1,10 @@
+{
+  "scheme": "$${local.postgresql_databases_data.${database_name}.scheme}",
+  "host": "$${local.postgresql_databases_data.${database_name}.host}",
+  "database": "$${local.postgresql_databases_data.${database_name}.database}",
+  "username": "$${local.postgresql_databases_data.${database_name}.username}",
+  "port": "$${local.postgresql_databases_data.${database_name}.port}",
+  "password": "$${local.postgresql_databases_data.${database_name}.password}",
+  "superuser": false,
+  "sslmode": "require"
+}

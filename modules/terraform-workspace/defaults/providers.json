@@ -1,0 +1,135 @@
+{
+  "assert": {
+    "source": "bwoznicki/assert",
+    "version": "0.0.1"
+  },
+  "auth0": {
+    "source": "auth0/auth0",
+    "version": "0.39.0",
+    "parameters": {
+      "vendor": {
+        "domain": "auth0_domain",
+        "client_id": "auth0_client_id",
+        "client_secret": "auth0_client_secret"
+      }
+    }
+  },
+  "aws": {
+    "source": "hashicorp/aws",
+    "version": "4.43.0"
+  },
+  "aws-sso-scim": {
+    "source": "BurdaForward/aws-sso-scim",
+    "version": "0.7.0",
+    "parameters": {
+      "vendor": {
+        "endpoint": "aws_scim_endpoint",
+        "token": "aws_scim_access_token"
+      }
+    }
+  },
+  "awsutils": {
+    "source": "cloudposse/awsutils",
+    "version": "0.15.0"
+  },
+  "cloudflare": {
+    "source": "cloudflare/cloudflare",
+    "version": "3.26.0",
+    "parameters": {
+      "vendor": {
+        "api_token": "cloudflare_api_token"
+      }
+    }
+  },
+  "datadog": {
+    "source": "DataDog/datadog",
+    "version": "3.17.0",
+    "parameters": {
+      "vendor": {
+        "api_key": "datadog_api_key",
+        "app_key": "datadog_app_key"
+      }
+    }
+  },
+  "fly": {
+    "source": "fly-apps/fly",
+    "version": "0.0.20",
+    "parameters": {
+      "vendor": {
+        "fly_api_token": "flyio_token"
+      }
+    }
+  },
+  "github": {
+    "source": "integrations/github",
+    "version": "5.6.0",
+    "parameters": {}
+  },
+  "googleworkspace": {
+    "source": "hashicorp/googleworkspace",
+    "version": "0.7.0",
+    "parameters": {
+      "static": {
+        "impersonated_user_email": "internal-tooling-bot@flipsidecrypto.com",
+        "customer_id": "C00m3i1uh",
+        "oauth_scopes": [
+          "https://www.googleapis.com/auth/admin.directory.user",
+          "https://www.googleapis.com/auth/admin.directory.userschema",
+          "https://www.googleapis.com/auth/admin.directory.group",
+          "https://www.googleapis.com/auth/apps.groups.settings"
+        ]
+      },
+      "vendor": {
+        "credentials": "google_service_account"
+      }
+    }
+  },
+  "helm": {
+    "source": "hashicorp/helm",
+    "version": "2.7.1"
+  },
+  "kubectl": {
+    "source": "gavinbunney/kubectl",
+    "version": "1.14.0"
+  },
+  "kubernetes": {
+    "source": "hashicorp/kubernetes",
+    "version": "2.14.0"
+  },
+  "postgresql": {
+    "source": "cyrilgdn/postgresql",
+    "version": "1.17.1"
+  },
+  "slack": {
+    "source": "pablovarela/slack",
+    "version": "1.1.27",
+    "parameters": {
+      "vendor": {
+        "token": "slack_token"
+      }
+    }
+  },
+  "snowflake": {
+    "source": "Snowflake-Labs/snowflake",
+    "version": "0.48.0",
+    "parameters": {
+      "static": {
+        "username": "tooling-tf-snow",
+        "account": "vna27887",
+        "region": "us-east-1",
+        "role": "ACCOUNTADMIN"
+      },
+      "vendor": {
+        "private_key": "snowflake_private_key"
+      }
+    }
+  },
+  "sops": {
+    "source": "carlpett/sops",
+    "version": "0.7.1"
+  },
+  "utils": {
+    "source": "cloudposse/utils",
+    "version": "1.5.0"
+  }
+}

@@ -1,0 +1,156 @@
+base:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      shell: bash
+      working-directory: ${workspace_dir}
+  if: >
+    github.event.name != 'workflow_run' ||
+    github.event.workflow_run.conclusion == 'success'
+steps:
+  setup:
+    - uses: actions/checkout@v3
+      with:
+        token: "$${{ secrets.FLIPSIDE_GITHUB_TOKEN }}"
+    - name: Install SSH key
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 10
+        max_attempts: 6
+        command: |
+          set -eo pipefail
+          
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$${{ secrets.EXTERNAL_CI_BOT_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          curl --silent https://api.github.com/meta | jq --raw-output '"github.com "+.ssh_keys[]' >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-access-key-id: $${{ secrets.EXTERNAL_CI_ACCESS_KEY }}
+        aws-secret-access-key: $${{ secrets.EXTERNAL_CI_SECRET_KEY }}
+        aws-region: us-east-1
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+        cache: 'pipenv'
+        cache-dependency-path: .github/Pipfile.lock
+    - name: Install Terraform Python requirements
+      run: |
+        curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+        pipenv install --deploy --system
+      working-directory: .github
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18.x"
+    - uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: ${terraform_version}
+    - name: Config Terraform plugin cache
+      run: |
+        echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' >~/.terraformrc
+        mkdir --parents ~/.terraform.d/plugin-cache
+        mkdir ~/.tmp
+    - name: Cache Terraform
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.terraform.d/plugin-cache
+          ~/.tmp
+        key: |
+          $${{ runner.os }}-terraform-$${{ github.repository }}-$${{ hashFiles('${workspace_dir}/.terraform.lock.hcl') }}
+        restore-keys: |
+          $${{ runner.os }}-terraform-$${{ github.repository }}-$${{ hashFiles('${workspace_dir}/.terraform.lock.hcl') }}
+    - name: Terraform Format
+      id: fmt
+      run: terraform fmt -recursive
+    - name: Terraform Init
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 60
+        max_attempts: 10
+        retry_wait_seconds: 30
+        command: |
+          cd ${workspace_dir}
+          terraform init --upgrade
+        on_retry_command: |
+          cd ${workspace_dir}
+          rm -rf ~/.terraform.d/plugin-cache ||:
+          rm -rf .terraform
+          terraform init --upgrade
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+  push:
+    - name: Terraform Apply
+      run: terraform apply -auto-approve -input=false
+      env:
+        GITHUB_TOKEN: $${{ secrets.FLIPSIDE_GITHUB_TOKEN }}
+        GITHUB_OWNER: "FlipsideCrypto"
+  pull_request:
+    - name: Terraform Plan
+      id: plan
+      run: terraform plan -no-color -input=false
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: $${{ secrets.FLIPSIDE_GITHUB_TOKEN }}
+        GITHUB_OWNER: "FlipsideCrypto"
+    - name: Update Pull Request
+      uses: actions/github-script@v6
+      env:
+        PLAN: "terraform\n$${{ steps.plan.outputs.stdout }}"
+      with:
+        github-token: $${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `### ${job_name}
+          #### Terraform Plan 📖\`$${{ steps.plan.outcome }}\`
+          
+          <details><summary>Show Plan</summary>
+          
+          \`\`\`\n
+          $${process.env.PLAN}
+          \`\`\`
+          
+          </details>
+          
+          *Pushed by: @$${{ github.actor }}, Action: \`$${{ github.event_name }}\`*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+    - name: Terraform Plan Status
+      if: steps.plan.outcome == 'failure'
+      run: exit 1
+  save:
+    - name: Set repository ownership
+      working-directory: .
+      run: |
+        pwd
+        sudo chown -R "$USER" "$GITHUB_WORKSPACE"
+        git config --global user.name "devops-flipsidecrypto"
+        git config --global user.email devops-flipsidecrypto@users.noreply.github.com
+    - name: Pull latest remote changes
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 30
+        max_attempts: 10
+        retry_wait_seconds: 30
+        command: |
+          if ! git diff-index --quiet HEAD; then
+            git pull --rebase --autostash
+            git add -A
+            git commit -m "Terraform repository changes from the ${job_name} workspace [skip actions]"
+          
+            echo -e "Log:\n$(git log --oneline ${workspace_branch}..origin/${workspace_branch})"        
+          
+            git push
+          else
+            echo "No changes to push"
+          fi

@@ -1,0 +1,14 @@
+{
+  "data": {
+    "terraform_remote_state": {
+      "context-data": {
+        "backend": "s3",
+        "config": {
+          "bucket": "flipside-crypto-internal-tooling",
+          "key": "${state_path}",
+          "region": "us-east-1"
+        }
+      }
+    }
+  }
+}

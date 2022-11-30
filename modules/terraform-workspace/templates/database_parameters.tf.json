@@ -1,0 +1,15 @@
+{
+  "module": {
+    "database-parameters": {
+      "source": "git@github.com:FlipsideCrypto/terraform-modules.git//database/database-parameters/database-parameters-from-ssm",
+      "providers": {
+        "aws": "aws.parameters"
+      },
+      "ssm_prefix": "/root/databases",
+      "environment": "$${local.database_environment}"
+    }
+  },
+  "locals": {
+    "database_environment": "${database_environment}"
+  }
+}

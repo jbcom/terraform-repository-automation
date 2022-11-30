@@ -1,0 +1,16 @@
+{
+  "module": {
+    "vendors": {
+      "source": "git@github.com:FlipsideCrypto/terraform-modules.git//secrets/vendors",
+      "providers": {
+        "aws": "aws.parameters"
+      },
+      "from_local": "${use_local_secrets}",
+      "secrets_dir": "$${local.secrets_dir}"
+    }
+  },
+  "locals": {
+    "vendors_data": "$${module.vendors.vendors}",
+    "secrets_dir": "${secrets_dir}"
+  }
+}

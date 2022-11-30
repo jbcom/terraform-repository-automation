@@ -1,0 +1,16 @@
+runs-on: ubuntu-latest
+steps:
+  - name: Bump version and push tag
+    id: bump-version-and-push
+    uses: hennejg/github-tag-action@v4.3.1
+    with:
+      github_token: $${{ secrets.FLIPSIDE_GITHUB_TOKEN }}
+  - name: Release
+    uses: softprops/action-gh-release@v1
+    with:
+      name: $${{ steps.bump-version-and-push.outputs.new_tag }}
+      tag_name: $${{ steps.bump-version-and-push.outputs.new_tag }}
+      body: $${{ steps.bump-version-and-push.outputs.changelog }}
+      tag_prefix: '${tag_prefix}'
+      generate_release_notes: true
+      token: $${{ secrets.FLIPSIDE_GITHUB_TOKEN }}
